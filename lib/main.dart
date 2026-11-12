@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myportofolio_mobile/menu.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -11,15 +12,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-    title: 'MyPortfolio',
-    theme: ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.indigo,
-        secondary: Colors.amber[700],
+      title: 'MyPortfolio',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.indigo,
+          secondary: Colors.amber[700],
+        ),
+        useMaterial3: true,
       ),
-      useMaterial3: true,
-    ),
-    home: MyHomePage(),
-  );
+      home: MyHomePage(),
+    );
   }
 }

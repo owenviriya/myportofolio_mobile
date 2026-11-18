@@ -96,4 +96,3 @@ sendiri dan memperoleh hasil No issues found!.
 
 Log chat AI:
 - Tugas 7: https://chatgpt.com/s/cx_6af53a1201c88191bfe1f5f4fccdf548
-

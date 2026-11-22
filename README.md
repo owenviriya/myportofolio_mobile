@@ -8,7 +8,8 @@
 
 MyPortofolio Mobile adalah aplikasi portofolio pribadi yang dibuat menggunakan Flutter.
 Aplikasi ini menampilkan identitas pemilik dan kartu menu untuk Proyek, Skills, Experience,
-Education, serta Logout. Saat kartu ditekan, aplikasi menampilkan SnackBar sesuai nama aksi.
+Education, serta Logout. Aplikasi menyediakan formulir untuk menambahkan proyek dan pengalaman.
+Data formulir divalidasi lalu ditampilkan dalam dialog ringkasan; saat ini belum disimpan ke database.
 
 ## Menjalankan Secara Lokal
 
@@ -85,14 +86,60 @@ seperti main() perlu dijalankan ulang.
 
 Perubahan kode native atau konfigurasi platform dapat memerlukan full restart/build.
 
+### Tugas 8
+
+1. Perbedaan Navigator.push(), pushReplacement(), dan pop()
+
+`Navigator.push()` menambahkan halaman baru di atas halaman saat ini. Pada aplikasi ini,
+kartu Tambah Proyek dan Tambah Experience memakai `push()` untuk membuka formulir. Tombol
+kembali perangkat atau browser menjalankan pop pada halaman formulir sehingga pengguna
+kembali ke halaman sebelumnya. `Navigator.pushReplacement()` mengganti halaman teratas
+dengan halaman baru, sehingga halaman lama tidak lagi menjadi tujuan tombol kembali. Opsi
+Home pada drawer menggunakan `pushReplacement()` untuk membuka halaman utama. `Navigator.pop()`
+menghapus halaman atau dialog teratas; tombol OK pada dialog ringkasan memakainya untuk
+menutup dialog.
+
+2. Peran Scaffold, AppBar, dan Drawer
+
+`Scaffold` menyediakan kerangka halaman yang berisi `AppBar`, konten, dan drawer. Struktur
+ini digunakan di halaman utama maupun halaman formulir agar navigasi tetap konsisten. Drawer
+yang sama dipakai pada kedua halaman dan menyediakan pilihan Home, Add Project, dan Add
+Experience. Warna indigo digunakan pada tema aplikasi dan AppBar formulir agar tampilannya
+selaras dengan halaman utama.
+
+3. Alasan pemilihan tata letak formulir
+
+Form disusun dalam `Column` di dalam `SingleChildScrollView`, sehingga field ditampilkan
+berurutan dan konten dapat digulir saat tinggi layar terbatas atau papan ketik terbuka.
+Setiap field dibungkus `Padding` untuk memberi jarak dan memudahkan tiap input dibaca.
+Tombol Simpan berada setelah field dalam area yang sama sehingga dapat dijangkau dengan
+menggulir formulir.
+
+4. Peran GlobalKey<FormState>, validator, dan validate()
+
+`GlobalKey<FormState>` memberi akses ke state Form. Setiap `validator` memeriksa nilai pada
+field terkait, lalu `validate()` menjalankan seluruh validator ketika tombol Simpan ditekan.
+Dialog ringkasan hanya ditampilkan jika semua input wajib lolos validasi. Contohnya, judul
+atau deskripsi yang kosong maupun hanya berisi spasi ditolak; judul juga dibatasi maksimal
+255 karakter. URL logo boleh kosong, tetapi jika diisi harus berupa URL HTTP atau HTTPS yang
+memiliki host. Keyboard URL hanya mengubah jenis papan ketik yang ditampilkan dan tidak
+memastikan teks yang dimasukkan benar-benar URL, sehingga validasi tetap diperlukan.
+
 ## AI Disclosure
 
-Saya menggunakan OpenAI Codex (GPT-6) sebagai tutor dan reviewer. Saya meminta penjelasan
-secara bertahap, memberikan konteks kode atau pesan error, lalu menerapkan dan memeriksa
-perubahan sendiri. AI membantu menjelaskan struktur widget, memberi saran untuk menyesuaikan
-menu dengan website Django, dan menganalisis screenshot overflow. Atas permintaan saya,
-Codex juga merapikan format `main.dart` dan `menu.dart`. Saya menjalankan `flutter analyze`
-sendiri dan memperoleh hasil No issues found!.
+Pada Tugas 7, saya menggunakan OpenAI Codex (GPT-6) sebagai tutor dan reviewer untuk
+memahami struktur widget Flutter, menyesuaikan menu mobile dengan website Django, serta
+menganalisis screenshot overflow. Saya meminta penjelasan secara bertahap dan memberikan
+konteks kode atau pesan error. Codex juga membantu merapikan format `main.dart` dan
+`menu.dart`. Saya meninjau saran dan menjalankan pemeriksaan sendiri.
+
+Pada Tugas 8, saya menggunakan OpenAI Codex (GPT-6) untuk memahami instruksi tugas dan
+mencocokkan field form dengan model Experience Django. Atas permintaan saya, Codex membantu
+membuat halaman formulir Experience, validasi input, navigasi dari kartu dan drawer, serta
+draf jawaban reflektif README. Saya meninjau perubahan, menjalankan aplikasi di Chrome,
+mencoba alur form, dan menjalankan `flutter analyze`; hasilnya No issues found!. Form ini
+hanya menampilkan ringkasan di dialog dan belum menyimpan data ke database.
 
 Log chat AI:
 - Tugas 7: https://chatgpt.com/s/cx_6af53a1201c88191bfe1f5f4fccdf548
+- Tugas 8: https://chatgpt.com/s/cx_6b02833e64588191a1e2c63240af1852

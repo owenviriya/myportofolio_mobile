@@ -221,7 +221,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                         ),
                       );
                     },
-                    child: const Text('Simpan'),
+                    child: const Text('Save'),
                   ),
                 ),
               ),

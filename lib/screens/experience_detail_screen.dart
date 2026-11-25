@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/models/experience.dart';
+import 'package:myportofolio_mobile/widgets/remote_image.dart';
 
 class ExperienceDetailScreen extends StatelessWidget {
   const ExperienceDetailScreen({required this.experience, super.key});
@@ -15,17 +16,12 @@ class ExperienceDetailScreen extends StatelessWidget {
         children: [
           _DetailField(label: 'ID', value: experience.id ?? '-'),
           if (experience.logo.isNotEmpty) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                experience.logo,
-                height: 200,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const SizedBox(
-                  height: 100,
-                  child: Center(child: Text('Logo could not be loaded.')),
-                ),
-              ),
+            RemoteImage(
+              url: experience.logo,
+              height: 200,
+              fit: BoxFit.contain,
+              borderRadius: 12,
+              fallbackIcon: Icons.business_outlined,
             ),
             const SizedBox(height: 16),
           ],

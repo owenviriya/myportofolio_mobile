@@ -5,6 +5,7 @@ import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/services/api_client.dart';
 import 'package:myportofolio_mobile/widgets/auth_guard.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
+import 'package:myportofolio_mobile/widgets/remote_image.dart';
 import 'package:provider/provider.dart';
 
 class ExperienceListScreen extends StatefulWidget {
@@ -109,12 +110,14 @@ class _ExperienceListScreenState extends State<ExperienceListScreen> {
                     vertical: 6,
                   ),
                   child: ListTile(
-                    leading: experience.logo.isEmpty
-                        ? const CircleAvatar(child: Icon(Icons.work_outline))
-                        : CircleAvatar(
-                            backgroundImage: NetworkImage(experience.logo),
-                            onBackgroundImageError: (_, _) {},
-                          ),
+                    leading: RemoteImage(
+                      url: experience.logo,
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.cover,
+                      borderRadius: 24,
+                      fallbackIcon: Icons.work_outline,
+                    ),
                     title: Text(experience.title),
                     subtitle: Text(
                       [

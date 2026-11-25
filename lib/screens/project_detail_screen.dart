@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/models/project.dart';
+import 'package:myportofolio_mobile/widgets/remote_image.dart';
 
 class ProjectDetailScreen extends StatelessWidget {
   const ProjectDetailScreen({required this.project, super.key});
@@ -14,20 +15,12 @@ class ProjectDetailScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           if (project.projectImageUrl.isNotEmpty) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                project.projectImageUrl,
-                height: 220,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 220,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  alignment: Alignment.center,
-                  child: const Text('Image could not be loaded.'),
-                ),
-              ),
+            RemoteImage(
+              url: project.projectImageUrl,
+              height: 220,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              borderRadius: 12,
             ),
             const SizedBox(height: 20),
           ],

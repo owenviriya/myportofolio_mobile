@@ -1,5 +1,10 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:myportofolio_mobile/models/experience.dart';
+import 'package:myportofolio_mobile/services/api_client.dart';
+import 'package:myportofolio_mobile/services/auth_state.dart';
+import 'package:myportofolio_mobile/widgets/auth_guard.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
+import 'package:provider/provider.dart';
 
 class ExperienceFormPage extends StatefulWidget {
   const ExperienceFormPage({super.key});
@@ -17,12 +22,25 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
   String _period = '';
   String _location = '';
   String _logo = '';
+  String _highlights = '';
+  String _tags = '';
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkAccess());
+  }
+
+  Future<void> _checkAccess() async {
+    final loggedIn = await ensureLoggedIn(context);
+    if (!mounted) return;
+    if (!loggedIn) Navigator.pop(context);
+  }
 
   String? _validateRequired(String? value, String label, {int? maxLength}) {
     final text = value?.trim() ?? '';
-    if (text.isEmpty) {
-      return '$label tidak boleh kosong!';
-    }
+    if (text.isEmpty) return '$label tidak boleh kosong.';
     if (maxLength != null && text.length > maxLength) {
       return '$label maksimal $maxLength karakter.';
     }
@@ -30,8 +48,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
   }
 
   String? _validateOptionalText(String? value, String label, int maxLength) {
-    final text = value?.trim() ?? '';
-    if (text.length > maxLength) {
+    if ((value?.trim().length ?? 0) > maxLength) {
       return '$label maksimal $maxLength karakter.';
     }
     return null;
@@ -48,183 +65,201 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
         uri.host.isEmpty) {
       return 'Masukkan URL logo yang valid (http atau https).';
     }
-    if (text.length > 255) {
-      return 'URL logo maksimal 255 karakter.';
-    }
-    return null;
+    return _validateOptionalText(text, 'URL logo', 255);
   }
 
-  void _resetForm() {
-    _formKey.currentState?.reset();
-    setState(() {
-      _title = '';
-      _description = '';
-      _organization = '';
-      _period = '';
-      _location = '';
-      _logo = '';
-    });
+  List<String> _splitValues(String value) => value
+      .split(',')
+      .map((item) => item.trim())
+      .where((item) => item.isNotEmpty)
+      .toList();
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSubmitting = true);
+    try {
+      final loggedIn = await ensureLoggedIn(context);
+      if (!mounted || !loggedIn) return;
+
+      final token = context.read<AuthState>().token;
+      if (token == null) return;
+
+      final experience = Experience(
+        title: _title.trim(),
+        description: _description.trim(),
+        organization: _organization.trim(),
+        period: _period.trim(),
+        location: _location.trim(),
+        logo: _logo.trim(),
+        highlights: _splitValues(_highlights),
+        tags: _splitValues(_tags),
+      );
+      final created = await context.read<ApiClient>().createExperience(
+        experience,
+        token: token,
+      );
+      if (!mounted) return;
+
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Experience created'),
+          content: Text('"${created.title}" was added successfully.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Back to list'),
+            ),
+          ],
+        ),
+      );
+      if (mounted) Navigator.pop(context, true);
+    } on ApiException catch (error) {
+      if (!mounted) return;
+
+      if (error.statusCode == 401) {
+        await context.read<AuthState>().logout();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Session expired. Please log in again.'),
+            ),
+          );
+        await ensureLoggedIn(context);
+      } else {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text('Could not save experience (${error.statusCode}).'),
+            ),
+          );
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text('Could not save experience: $error')),
+        );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Experience Form'),
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: const Text('Add Experience')),
       drawer: const LeftDrawer(),
       body: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: TextFormField(
-                  maxLength: 255,
-                  decoration: const InputDecoration(
-                    labelText: 'Judul Pengalaman *',
-                    hintText: 'Contoh: Software Engineer',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (value) => _title = value,
-                  validator: (value) => _validateRequired(
-                    value,
-                    'Judul pengalaman',
-                    maxLength: 255,
-                  ),
-                ),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            TextFormField(
+              maxLength: 255,
+              decoration: const InputDecoration(
+                labelText: 'Title *',
+                hintText: 'Software Engineer',
+                border: OutlineInputBorder(),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: TextFormField(
-                  minLines: 3,
-                  maxLines: 5,
-                  decoration: const InputDecoration(
-                    labelText: 'Deskripsi *',
-                    hintText: 'Jelaskan tanggung jawab atau pekerjaanmu',
-                    border: OutlineInputBorder(),
-                    alignLabelWithHint: true,
-                  ),
-                  onChanged: (value) => _description = value,
-                  validator: (value) => _validateRequired(value, 'Deskripsi'),
-                ),
+              onChanged: (value) => _title = value,
+              validator: (value) =>
+                  _validateRequired(value, 'Title', maxLength: 255),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              minLines: 3,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                labelText: 'Description *',
+                border: OutlineInputBorder(),
+                alignLabelWithHint: true,
               ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: TextFormField(
-                  maxLength: 255,
-                  decoration: const InputDecoration(
-                    labelText: 'Organisasi',
-                    hintText: 'Nama organisasi atau perusahaan',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (value) => _organization = value,
-                  validator: (value) =>
-                      _validateOptionalText(value, 'Organisasi', 255),
-                ),
+              onChanged: (value) => _description = value,
+              validator: (value) => _validateRequired(value, 'Description'),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              maxLength: 255,
+              decoration: const InputDecoration(
+                labelText: 'Organization',
+                border: OutlineInputBorder(),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: TextFormField(
-                  maxLength: 255,
-                  decoration: const InputDecoration(
-                    labelText: 'Periode',
-                    hintText: 'Contoh: Januari 2024 - Sekarang',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (value) => _period = value,
-                  validator: (value) =>
-                      _validateOptionalText(value, 'Periode', 255),
-                ),
+              onChanged: (value) => _organization = value,
+              validator: (value) =>
+                  _validateOptionalText(value, 'Organization', 255),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              maxLength: 255,
+              decoration: const InputDecoration(
+                labelText: 'Period',
+                hintText: 'January 2024 - Present',
+                border: OutlineInputBorder(),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: TextFormField(
-                  maxLength: 255,
-                  decoration: const InputDecoration(
-                    labelText: 'Lokasi',
-                    hintText: 'Contoh: Jakarta, Indonesia',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (value) => _location = value,
-                  validator: (value) =>
-                      _validateOptionalText(value, 'Lokasi', 255),
-                ),
+              onChanged: (value) => _period = value,
+              validator: (value) => _validateOptionalText(value, 'Period', 255),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              maxLength: 255,
+              decoration: const InputDecoration(
+                labelText: 'Location',
+                border: OutlineInputBorder(),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: TextFormField(
-                  keyboardType: TextInputType.url,
-                  decoration: const InputDecoration(
-                    labelText: 'URL Logo',
-                    hintText: 'https://contoh.com/logo.png',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (value) => _logo = value,
-                  validator: _validateLogoUrl,
-                ),
+              onChanged: (value) => _location = value,
+              validator: (value) =>
+                  _validateOptionalText(value, 'Location', 255),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              keyboardType: TextInputType.url,
+              maxLength: 255,
+              decoration: const InputDecoration(
+                labelText: 'Logo URL',
+                hintText: 'https://example.com/logo.png',
+                border: OutlineInputBorder(),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.all(Colors.indigo),
-                      foregroundColor: WidgetStateProperty.all(Colors.white),
-                    ),
-                    onPressed: () {
-                      if (!_formKey.currentState!.validate()) return;
-
-                      showDialog<void>(
-                        context: context,
-                        builder: (dialogContext) => AlertDialog(
-                          title: const Text('Pengalaman berhasil ditambahkan!'),
-                          content: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text('Judul: ${_title.trim()}'),
-                                Text('Deskripsi: ${_description.trim()}'),
-                                Text(
-                                  'Organisasi: ${_organization.trim().isEmpty ? '-' : _organization.trim()}',
-                                ),
-                                Text(
-                                  'Periode: ${_period.trim().isEmpty ? '-' : _period.trim()}',
-                                ),
-                                Text(
-                                  'Lokasi: ${_location.trim().isEmpty ? '-' : _location.trim()}',
-                                ),
-                                Text(
-                                  'URL Logo: ${_logo.trim().isEmpty ? '-' : _logo.trim()}',
-                                ),
-                              ],
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(dialogContext);
-                                _resetForm();
-                              },
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    child: const Text('Save'),
-                  ),
-                ),
+              onChanged: (value) => _logo = value,
+              validator: _validateLogoUrl,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: 'Highlights',
+                hintText: 'Comma-separated highlights',
+                border: OutlineInputBorder(),
               ),
-            ],
-          ),
+              onChanged: (value) => _highlights = value,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              decoration: const InputDecoration(
+                labelText: 'Tags',
+                hintText: 'Comma-separated tags',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) => _tags = value,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _isSubmitting ? null : _submit,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Save experience'),
+            ),
+          ],
         ),
       ),
     );

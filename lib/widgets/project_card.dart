@@ -1,6 +1,7 @@
 import 'package:myportofolio_mobile/screens/menu.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/screens/experience_form.dart';
+import 'package:myportofolio_mobile/screens/experience_list_screen.dart';
 import 'package:myportofolio_mobile/services/auth_state.dart';
 import 'package:myportofolio_mobile/screens/project_list_screen.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
@@ -44,6 +45,13 @@ class ItemCard extends StatelessWidget {
                 builder: (context) => const ProjectListScreen(),
               ),
             );
+          } else if (item.name == "Lihat Experience") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ExperienceListScreen(),
+              ),
+            );
           } else if (item.name == "Login") {
             await ensureLoggedIn(context);
           } else if (item.name == "Logout") {
@@ -53,6 +61,8 @@ class ItemCard extends StatelessWidget {
               ..hideCurrentSnackBar()
               ..showSnackBar(const SnackBar(content: Text('Logout berhasil.')));
           } else if (item.name == "Tambah Experience") {
+            final loggedIn = await ensureLoggedIn(context);
+            if (!context.mounted || !loggedIn) return;
             Navigator.push(
               context,
               MaterialPageRoute(

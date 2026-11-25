@@ -92,12 +92,11 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                     border: OutlineInputBorder(),
                   ),
                   onChanged: (value) => _title = value,
-                  validator: (value) =>
-                      _validateRequired(
-                        value,
-                        'Judul pengalaman',
-                        maxLength: 255,
-                      ),
+                  validator: (value) => _validateRequired(
+                    value,
+                    'Judul pengalaman',
+                    maxLength: 255,
+                  ),
                 ),
               ),
               Padding(
@@ -112,8 +111,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                     alignLabelWithHint: true,
                   ),
                   onChanged: (value) => _description = value,
-                  validator: (value) =>
-                      _validateRequired(value, 'Deskripsi'),
+                  validator: (value) => _validateRequired(value, 'Deskripsi'),
                 ),
               ),
               Padding(

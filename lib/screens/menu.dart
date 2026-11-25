@@ -1,6 +1,8 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:myportofolio_mobile/services/auth_state.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
 import 'package:myportofolio_mobile/widgets/project_card.dart';
+import 'package:provider/provider.dart';
 
 class MyHomePage extends StatelessWidget {
   MyHomePage({super.key});
@@ -20,11 +22,20 @@ class MyHomePage extends StatelessWidget {
       Colors.orange.shade700,
     ),
     ItemHomepage('Lihat Education', Icons.school, Colors.indigo.shade700),
-    ItemHomepage('Logout', Icons.logout, Colors.red.shade700),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final isLoggedIn = context.watch<AuthState>().isLoggedIn;
+    final visibleItems = [
+      ...items,
+      ItemHomepage(
+        isLoggedIn ? 'Logout' : 'Login',
+        isLoggedIn ? Icons.logout : Icons.login,
+        isLoggedIn ? Colors.red.shade700 : Colors.blueGrey.shade700,
+      ),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -70,7 +81,7 @@ class MyHomePage extends StatelessWidget {
                       crossAxisCount: 3,
                       physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
-                      children: items.map((ItemHomepage item) {
+                      children: visibleItems.map((ItemHomepage item) {
                         return ItemCard(item);
                       }).toList(),
                     ),

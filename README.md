@@ -234,3 +234,4 @@ semuanya lulus.
 Log chat AI:
 - Tugas 7: https://chatgpt.com/s/cx_6af53a1201c88191bfe1f5f4fccdf548
 - Tugas 8: https://chatgpt.com/s/cx_6b02833e64588191a1e2c63240af1852
+- Tugas 9: https://chatgpt.com/s/cx_6b06b0a3592881918d20030295ce4d75
